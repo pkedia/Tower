@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html lang="en">
+
+  <head>
+    <meta charset="utf-8">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.4/jquery.min.js"></script>
+	<title>TowerOfBrahma</title>
+    <style type="text/css">
+    table { 
+      table-layout:fixed; width:450px;
+	  border-spacing: 0px;
+	  border-collapse: collapse;
+    }
+    table tr {
+      height: 30px;
+    }
+    #container {
+       width: 460px;
+       height: 30px;
+	   left: 200px;
+       position: relative;
+    }
+    #slider {
+       width: 160px;
+       height: 30px;
+	   Left: 55px;
+       position: absolute;
+    }
+	#ringincolumn33060 {
+		position: absolute;
+		top:330;
+		left:60;
+	}
+	#ringincolumn30060 {
+		position: absolute;
+		top:300;
+		left:60;
+	}
+	#ringincolumn27060 {
+		position: absolute;
+		top:270;
+		left:60;
+	}
+	#ringincolumn24060 {
+		position: absolute;
+		top:240;
+		left:60;
+	}
+    </style>
+ 	<script>
+	var moveslist = [[112 ,213 ,123 ,312 ,131 ,232 ,112],
+					[113 ,212 ,132 ,313 ,121 ,223 ,113 ,412 ,132 ,231 ,121 ,332 ,113 ,212 ,132],
+					[112 ,213 ,123 ,312 ,131 ,232 ,112 ,413 ,123 ,221 ,131 ,323 ,112 ,213 ,123 ,
+						512 ,131 ,232 ,112 ,331 ,123 ,221 ,131 ,432 ,112 ,213 ,123 ,312 ,131 ,232 ,112],
+					[113 ,212 ,132 ,313 ,121 ,223 ,113 ,412 ,132 ,231 ,121 ,332 ,113 ,212 ,132 ,513 ,
+						121 ,223 ,113 ,321 ,132 ,231 ,121 ,423 ,113 ,212 ,132 ,313 ,121 ,223 ,113 ,612 ,
+						132 ,231 ,121 ,332 ,113 ,212 ,132 ,431 ,121 ,223 ,113 ,321 ,132 ,231 ,121 ,532 ,
+						113 ,212 ,132 ,313 ,121 ,223 ,113 ,412 ,132 ,231 ,121 ,332 ,113 ,212 ,132],
+					[112 ,213 ,123 ,312 ,131 ,232 ,112 ,413 ,123 ,221 ,131 ,323 ,112 ,213 ,123 ,512 ,
+						131 ,232 ,112 ,331 ,123 ,221 ,131 ,432 ,112 ,213 ,123 ,312 ,131 ,232 ,112 ,613 ,
+						123 ,221 ,131 ,323 ,112 ,213 ,123 ,421 ,131 ,232 ,112 ,331 ,123 ,221 ,131 ,523 ,
+						112 ,213 ,123 ,312 ,131 ,232 ,112 ,413 ,123 ,221 ,131 ,323 ,112 ,213 ,123 ,712 ,
+						131 ,232 ,112 ,331 ,123 ,221 ,131 ,432 ,112 ,213 ,123 ,312 ,131 ,232 ,112 ,531 ,
+						123 ,221 ,131 ,323 ,112 ,213 ,123 ,421 ,131 ,232 ,112 ,331 ,123 ,221 ,131 ,632 ,
+						112 ,213 ,123 ,312 ,131 ,232 ,112 ,413 ,123 ,221 ,131 ,323 ,112 ,213 ,123 ,512 ,
+						131 ,232 ,112 ,331 ,123 ,221 ,131 ,432 ,112 ,213 ,123 ,312 ,131 ,232 ,112 ]
+					]
+	var cellIds =["image11","image12","image13","image14","image15","image16","image17",
+				  "image21","image22","image23","image24","image25","image26","image27",
+				  "image31","image32","image33","image34","image35","image36","image37"]
+	var ringSrcLinks = ["<img src=\"Ring 1.jpg\" id=\"ring1\" style=\"position:absolute; width=160px; height=30px;",
+	                    "<img src=\"Ring 2.jpg\" id=\"ring2\" style=\"position:absolute; width=160px; height=30px;",
+						"<img src=\"Ring 3.jpg\" id=\"ring3\" style=\"position:absolute; width=160px; height=30px;",
+						"<img src=\"Ring 4.jpg\" id=\"ring4\" style=\"position:absolute; width=160px; height=30px;",
+						"<img src=\"Ring 5.jpg\" id=\"ring5\" style=\"position:absolute; width=160px; height=30px;",
+						"<img src=\"Ring 6.jpg\" id=\"ring6\" style=\"position:absolute; width=160px; height=30px;",
+						"<img src=\"Ring 7.jpg\" id=\"ring7\" style=\"position:absolute; width=160px; height=30px;"]
+	var ringpos = ["Top:150px; Left:60px;\"","Top:180px; Left:60px;\"","Top:210px; Left:60px;\"","Top:240px; Left:60px;\"","Top:270px; Left:60px;\"",
+				     "Top:300px; Left:60px;\"","Top:330px; Left:60px;\"",
+				     "Top:150px; Left:210px;\"","Top:180px; Left:210px;\"","Top:210px; Left:210px;\"","Top:240px; Left:210px;\"","Top:270px; Left:210px;\"",
+				     "Top:300px; Left:210px;\"","Top:330px; Left:210px;\"",
+				     "Top:150px; Left:360px;\"","Top:180px; Left:360px;\"","Top:210px; Left:360px;\"","Top:240px; Left:360px;\"","Top:270px; Left:360px;\"",
+				     "Top:300px; Left:360px;\"","Top:330px; Left:360px;\"",]
+
+	function column(id,count) {
+		this.id = id;
+		this.count = count;
+		this.rings = [];
+		this.popOff = function() {
+			return(popOff(this));
+		};
+		this.pushOn = function(ring) {
+			pushOn(this,ring);
+		};
+	}
+	
+	function popOff(col) {
+		if (col.count == 0) {
+			return -1;
+		}
+		col.count--;
+		ringnum = col.rings.pop();
+		removeringfromcolumn(this,ringnum);
+		return ringnum;
+	}
+	
+	var col1 = new column(1,0);
+	var col2 = new column(2,0);
+	var col3 = new column(3,0);
+	var debub=false;
+	var moves = [];
+	var nRingsShowing = 0;
+	var movefinished = false;
+
+	function pushOn(col,ring) {
+		col.count++;
+		col.rings.push(ring)
+		showringInColumn(col,ring);
+	}
+	//this function will show the ring in the column above the top ring
+	function showringInColumn(col,ring) {
+		LimgLink = ringincolumnLink(ring,col.id,col.count);
+		nRingsShowing++;
+		document.getElementById("image"+nRingsShowing).innerHTML = LimgLink;
+//		show_image("ring "+ring+".jpg","160","30",topx,left,ring,"col" + col.id + "pos" + col.count);
+	}
+	//we always remove only the top item
+	function removeringfromcolumn(col,ring) {
+//		colPos = colLocId(col, false);
+//		changeElementContent(colPos,"");
+		elid = "ring" + ring;
+		nRingsShowing--;
+//		$("#"+elid).hide("fast")
+		document.getElementById(elid).style.display = "none";
+	}
+	
+	function ringImageLink(ring,leftOffset) {
+		link = "<img src=\"Ring "+ring+".jpg\" style=\"position:absolute; width=160px; height=30px;";
+		if (leftOffset > 0) {
+			link += 'left = ' + leftOffset.toString() +'px;" />';
+		} else {
+			link +=  '" />'
+		}
+		return link;			
+	}
+	//returns the link for placing the ring number "ring" in column "colno" at position "pos" from bottom i.e. 1,2,3 etc.
+	function ringincolumnLink(ring,colno,pos) {
+		link = ringSrcLinks[ring - 1] + ringpos[(colno-1)*7+7-pos] + "\">"
+		return link;			
+	}
+	
+	function changeElementContent(elID,strToAdd) {
+		document.getElementById(elID).innerHTML = strToAdd;
+	}
+	
+	function debugMessage(msg) {
+	  if (debug != undefined) {
+		  alert(msg);
+	  }
+	}
+	
+	//This is the callback function that parses the response
+/*	function ProcessMoves(xml) {
+		var i;
+		var list = "";
+		console.log("in ProcessMoves");
+		var xmlDoc = xml.responseXML;
+		if (xmlDoc == null) {
+			console.log("XMLDOC is null");
+		}
+		var x = xmlDoc.getElementsByTagName("move");
+		console.log(x.length);
+		for (i = 0; i <x.length; i++) { 
+			moves[moves.length] = x[i].childNodes[0].nodeValue;
+			console.log(i,moves.length,moves[moves.length-1]);
+			list += moves[moves.length-1];
+			}
+	}
+	
+	//This the AJAX function that sends the request to the server
+	function getMovesFromServer(url,cfunc,n) {
+		var xhttp;
+		xhttp=new XMLHttpRequest();
+		xhttp.onreadystatechange = function() {
+		if (xhttp.readyState == 4 && xhttp.status == 200) {
+			cfunc(xhttp);
+			}
+		};
+		xhttp.open("GET", url, false);
+		xhttp.send();
+	}
+*/	
+	function MoveRings() {
+		var i;
+		var x =  "y" //prompt("Debug (y or n:","n");
+		if (x =="y") {debug=true;}
+		// First let us put the rings in column 1 -->
+		var x = "3" //prompt("Number of rings:","0");
+		var quantity =  parseInt(x, 10);
+		//debugMessage("Number of rings = " + quantity);
+//		getMovesFromServer('/Tower?rings='+quantity,ProcessMoves,x)
+//		$.get('/Tower?rings='+quantity,ProcessMoves)
+//	Temporailky we are using predefined moves until I can solve the problem of connecting to the server by moving 
+//	the server to a different ip address
+		moves = moveslist[quantity-1]
+		for (i = quantity;i > 0 ;i--) {
+			col1.pushOn(i);
+			}
+		//debugMessage("images set");
+		for (i = 0; i <= moves.length;i++) {
+			var ringnum = Number(Number((moves[i])/100).toFixed(0));
+			var fromcol = Number(Number((moves[i]%100)/10).toFixed(0));
+			var tocol = moves[i]%10;
+			Slide(ringnum,fromcol,tocol);
+			}
+			//debugMessage("Move "+i+" done");
+	}
+/*	function animateRing(ring,ypos,colT) {
+        l = 5;
+		nIter = (colT.id - 1)*150/5;
+        for (i = 1;i <= nIter;i++) {
+			lval = 55 + l*i;
+			lnew = lval+'px'
+            div.slider{left: lnew}, 100);
+//			$("#slider").animate({left:lnew},100);
+        }
+		movefinished = true;
+		return;
+	}
+*/	
+	function slideDone() {
+		changeElementContent("slider","");
+		colT.pushOn(ring)
+		movedone = true
+	}
+	
+	function slideOneStep(lf) {
+		 document.getElementById("animate").style.left=lf;
+	}
+
+	function Slide(ring,colFr,colTo){
+		//debugMessage("Moving "+ring+" From column "+colFr+" To column "+colTo);
+		var colF,colT;
+		var ypos;
+		switch (colFr ) {
+			case 1: { colF = col1; break;}
+			case 2: { colF = col2; break;}
+			case 3: { colF = col3; break;}
+			default: { colF = undefined;}
+		}
+		switch (colTo) {
+			case 1: { colT = col1; break;}
+			case 2: { colT = col2; break;}
+			case 3: { colT = col3; break;}
+			default: { colT = undefined;}
+		}
+		colF.popOff();
+		changeElementContent("slider",ringImageLink(ring,55));
+		lcur = 55 + 150*(colFr - 1);
+        lnew = 55 + 150*(colTo - 1);
+		movedone = false;
+		for (lf = lcur;lf <= lnew;lf +=5) {
+			setTimeout(slideOneStep(lf),1000);
+		}
+		movedone=true;
+/*		$("#slider").animate({left:lnew},1000,function(){
+					changeElementContent("slider","");
+					colT.pushOn(ring);
+					movedone=true;
+*/	
+	}
+	</script>
+ </head>
+  <body>
+  <h1><cente>Tower Of Bramha</center></h1><br>
+  <div id ="container">
+  <div id ="slider"></div></div>
+  <div style="position: absolute; top:150px; left:200px">
+  <img src="towers.jpg" id="towers" width="600" height="400" align=left alt="" title="" />
+  <div id="image1"></div>
+  <div id="image2"></div>
+  <div id="image3"></div>
+  <div id="image4"></div>
+  <div id="image5"></div>
+  <div id="image6"></div>
+  <div id="image7"></div>
+  </div>
+
+ <center>
+    <input type="button" onclick="MoveRings()" Value="Submit">
+  </center>
+  </body>
+
+</html>

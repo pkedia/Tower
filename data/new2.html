@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+
+  <head>
+    <meta charset="utf-8">
+    <meta name="generator" content="CoffeeCup HTML Editor (www.coffeecup.com)">
+    <meta name="dcterms.created" content="Wed, 23 Dec 2015 05:05:03 GMT">    <meta name="description" content="">
+    <meta name="keywords" content="">
+    <title>TowerOfBrahma</title>
+	<script>
+	var gleft
+function show_image(src, width, height, top, left,id ) {
+    var img = document.createElement("img");
+    img.src = src;
+    img.width = width;
+    img.height = height;
+	img.top = top;
+	img.left = left;
+	img.id = "Ring1";
+
+    // This next line will just add it to the <body> tag
+    document.body.appendChild(img);
+	gleft = left
+
+}
+
+	function Showring() {
+		show_image("ring 1.jpg",160,30,330,500);
+		for (i = 1;i <= 30;i++) {
+			setTimeout(moveimage(), 50);
+		}
+	}
+
+	function moveimage() {
+		gleft += 10
+		document.getElementById("Ring1").style.left = gleft;
+	}
+	</script>
+	</head>
+	<body>
+	<h1>We are trying to show an Image</h1>
+		<input type="Button" onclick="Showring()" value="Submit">
+		<p id=imgsrc></>
+	</form> 
+	</body>
+	</html>

@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html>
+<style>
+#container {
+  width: 400px;
+  height: 400px;
+  position: relative;
+  background: yellow;
+}
+#animate {
+  width: 50px;
+  height: 50px;
+  position: absolute;
+  background-color: red;
+}
+</style>
+<body>
+
+<p>
+<input type="text" id="userInput"=> Speed of Animation</input>
+<button onclick="test()">Submit</button>
+<p id="speed"></p>
+<br>
+
+<button onclick="myMove()">Click Me</button>
+</p> 
+
+<div id ="container">
+<div id ="animate"></div>
+</div>
+
+<p id=coord></p>
+
+<script>
+var userInput = 5
+function test(){
+    userInput = document.getElementById("userInput").value;
+    document.getElementById("speed").innerHTML = "Speed set to " + userInput + " Enjoy"
+}
+
+function myMove() {
+  var elem = document.getElementById("animate");   
+  var xpos = 0;
+  var ypos = 0;
+  var xdir=1,ydir=1;
+  var id = setInterval(frame, userInput);
+  function frame() {
+    document.getElementById("coord").innerHTML = xpos + " : " + ypos + 
+        "xdir,ydir:" + xdir + " ; " + ydir;
+    if ((xpos == 175) && (ypos == 175) && (xdir + ydir == 2)) {
+       xdir = 1;
+       ydir = -1;
+    } else if ((xpos == 175) && (ypos == 175) && (xdir == 1) && (ydir == -1)) {
+       xdir = -1;
+       ydir = -1;
+    } else if ((xpos == 175) && (ypos == 175) && (xdir + ydir == 0)) {
+       xdir = 1;
+       ydir = 1;
+    } else if ((xpos == 175) && (ypos == 175) && (xdir + ydir == -2)) {
+       xdir = -1;
+       ydir = 1;
+    } else if (xpos == 350 && ypos == 0)  {
+       xdir = -1;
+       ydir = 1;
+    } else if (xpos == 350 && ypos ==350) {
+       xdir = -1;
+       ydir = -1;
+    } else if (xpos == 0 && ypos == 350) {
+       xdir = 1;
+       ydir = -1;
+    }
+    xpos += 5*xdir; ypos += 5*ydir;
+    elem.style.top = xpos + 'px'; 
+    elem.style.left = ypos + 'px'; 
+    if (xpos == 0 && ypos == 0) { 
+      clearInterval(id); 
+      document.getElementById("coord").innerHTML = "What a trip! We are all done";
+    }
+  }
+}
+</script>
+
+</body>
+</html>
