@@ -1,168 +1,109 @@
 <!DOCTYPE html>
 <html lang="en">
 
-  <head>
+<html>
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.4/jquery.min.js"></script>
+<head>
     <meta charset="utf-8">
-    <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.4/jquery.min.js"></script>
-	<title>TowerOfBrahma</title>
-    <style type="text/css">
-    table { 
-      table-layout:fixed; width:450px;
-	  border-spacing: 0px;
-	  border-collapse: collapse;
-    }
-    table tr {
-      height: 30px;
-    }
-    #container {
-       width: 460px;
-       height: 30px;
-	   left: 200px;
-       position: relative;
-    }
-    #slider {
-       width: 160px;
-       height: 30px;
-	   Left: 55px;
-       position: absolute;
-    }
-	#ringincolumn33060 {
-		position: absolute;
-		top:330;
-		left:60;
-	}
-	#ringincolumn30060 {
-		position: absolute;
-		top:300;
-		left:60;
-	}
-	#ringincolumn27060 {
-		position: absolute;
-		top:270;
-		left:60;
-	}
-	#ringincolumn24060 {
-		position: absolute;
-		top:240;
-		left:60;
-	}
-    </style>
- 	<script>
-	var moveslist = [[112 ,213 ,123 ,312 ,131 ,232 ,112],
-					[113 ,212 ,132 ,313 ,121 ,223 ,113 ,412 ,132 ,231 ,121 ,332 ,113 ,212 ,132],
-					[112 ,213 ,123 ,312 ,131 ,232 ,112 ,413 ,123 ,221 ,131 ,323 ,112 ,213 ,123 ,
-						512 ,131 ,232 ,112 ,331 ,123 ,221 ,131 ,432 ,112 ,213 ,123 ,312 ,131 ,232 ,112],
-					[113 ,212 ,132 ,313 ,121 ,223 ,113 ,412 ,132 ,231 ,121 ,332 ,113 ,212 ,132 ,513 ,
-						121 ,223 ,113 ,321 ,132 ,231 ,121 ,423 ,113 ,212 ,132 ,313 ,121 ,223 ,113 ,612 ,
-						132 ,231 ,121 ,332 ,113 ,212 ,132 ,431 ,121 ,223 ,113 ,321 ,132 ,231 ,121 ,532 ,
-						113 ,212 ,132 ,313 ,121 ,223 ,113 ,412 ,132 ,231 ,121 ,332 ,113 ,212 ,132],
-					[112 ,213 ,123 ,312 ,131 ,232 ,112 ,413 ,123 ,221 ,131 ,323 ,112 ,213 ,123 ,512 ,
-						131 ,232 ,112 ,331 ,123 ,221 ,131 ,432 ,112 ,213 ,123 ,312 ,131 ,232 ,112 ,613 ,
-						123 ,221 ,131 ,323 ,112 ,213 ,123 ,421 ,131 ,232 ,112 ,331 ,123 ,221 ,131 ,523 ,
-						112 ,213 ,123 ,312 ,131 ,232 ,112 ,413 ,123 ,221 ,131 ,323 ,112 ,213 ,123 ,712 ,
-						131 ,232 ,112 ,331 ,123 ,221 ,131 ,432 ,112 ,213 ,123 ,312 ,131 ,232 ,112 ,531 ,
-						123 ,221 ,131 ,323 ,112 ,213 ,123 ,421 ,131 ,232 ,112 ,331 ,123 ,221 ,131 ,632 ,
-						112 ,213 ,123 ,312 ,131 ,232 ,112 ,413 ,123 ,221 ,131 ,323 ,112 ,213 ,123 ,512 ,
-						131 ,232 ,112 ,331 ,123 ,221 ,131 ,432 ,112 ,213 ,123 ,312 ,131 ,232 ,112 ]
-					]
-	var cellIds =["image11","image12","image13","image14","image15","image16","image17",
-				  "image21","image22","image23","image24","image25","image26","image27",
-				  "image31","image32","image33","image34","image35","image36","image37"]
+<script type="text/javascript" src="https://gc.kis.scr.kaspersky-labs.com/1B74BD89-2A22-4B93-B451-1C9E1052A0EC/main.js" charset="UTF-8"></script><script>
+	var moveslist = [];
 	var ringSrcLinks = ["<img src=\"Ring 1.jpg\" id=\"ring1\" style=\"position:absolute; width=160px; height=30px;",
-	                    "<img src=\"Ring 2.jpg\" id=\"ring2\" style=\"position:absolute; width=160px; height=30px;",
+						"<img src=\"Ring 2.jpg\" id=\"ring2\" style=\"position:absolute; width=160px; height=30px;",
 						"<img src=\"Ring 3.jpg\" id=\"ring3\" style=\"position:absolute; width=160px; height=30px;",
 						"<img src=\"Ring 4.jpg\" id=\"ring4\" style=\"position:absolute; width=160px; height=30px;",
 						"<img src=\"Ring 5.jpg\" id=\"ring5\" style=\"position:absolute; width=160px; height=30px;",
 						"<img src=\"Ring 6.jpg\" id=\"ring6\" style=\"position:absolute; width=160px; height=30px;",
 						"<img src=\"Ring 7.jpg\" id=\"ring7\" style=\"position:absolute; width=160px; height=30px;"]
-	var ringpos = ["Top:150px; Left:60px;\"","Top:180px; Left:60px;\"","Top:210px; Left:60px;\"","Top:240px; Left:60px;\"","Top:270px; Left:60px;\"",
-				     "Top:300px; Left:60px;\"","Top:330px; Left:60px;\"",
-				     "Top:150px; Left:210px;\"","Top:180px; Left:210px;\"","Top:210px; Left:210px;\"","Top:240px; Left:210px;\"","Top:270px; Left:210px;\"",
-				     "Top:300px; Left:210px;\"","Top:330px; Left:210px;\"",
-				     "Top:150px; Left:360px;\"","Top:180px; Left:360px;\"","Top:210px; Left:360px;\"","Top:240px; Left:360px;\"","Top:270px; Left:360px;\"",
-				     "Top:300px; Left:360px;\"","Top:330px; Left:360px;\"",]
+//constants to position the rings correctly
+	var topposbase = 555;
+	var leftbase = 65;
 
-	function column(id,count) {
-		this.id = id;
-		this.count = count;
-		this.rings = [];
-		this.popOff = function() {
-			return(popOff(this));
-		};
-		this.pushOn = function(ring) {
-			pushOn(this,ring);
-		};
-	}
-	
-	function popOff(col) {
-		if (col.count == 0) {
-			return -1;
-		}
-		col.count--;
-		ringnum = col.rings.pop();
-		removeringfromcolumn(this,ringnum);
-		return ringnum;
-	}
-	
-	var col1 = new column(1,0);
-	var col2 = new column(2,0);
-	var col3 = new column(3,0);
-	var debub=false;
-	var moves = [];
-	var nRingsShowing = 0;
-	var movefinished = false;
+/**************************************************************  column  ****************************************/
 
-	function pushOn(col,ring) {
-		col.count++;
-		col.rings.push(ring)
-		showringInColumn(col,ring);
+function column(id,count) {
+	this.id = id;
+	this.count = count;
+}
+var nRings;
+var col1 = new column(1,0);
+var col2 = new column(2,0);
+var col3 = new column(3,0);
+nRingsShowing = 0;
+var colcount = [0,0,0,0];
+var m = 0;
+var counter=0;
+var speed = 50;
+
+/**************************************************************  updateCounter  ****************************************/
+function updateCounter(movearray) {
+	counter++;
+	document.getElementById("counter").innerHTML = "Number of moves made: "+counter;
+}
+/**************************************************************  showringInColumn  ****************************************/
+
+function showringInColumn(col,ring) {
+	LimgLink = ringincolumnLink(ring,col.id,col.count);
+	nRingsShowing++;
+	document.getElementById("image"+nRingsShowing).innerHTML = LimgLink;
+}
+
+/**************************************************************  ringincolumnLink  ****************************************/
+
+function ringincolumnLink(ring,colno,pos) {
+	posstr = "Top:"+(topposbase-(pos)*30)+"px; Left:"+(leftbase+150*(colno-1))+"px;\" />";
+	link = ringSrcLinks[ring - 1] + posstr;
+	return link;			
+}
+/**************************************************************  getNextMove  ****************************************/
+
+function getNextMove(){
+	m += 1;
+	if (m <= moveslist.length) {
+	    mov = moveslist[m-1];
+		return(mov);
 	}
-	//this function will show the ring in the column above the top ring
-	function showringInColumn(col,ring) {
-		LimgLink = ringincolumnLink(ring,col.id,col.count);
-		nRingsShowing++;
-		document.getElementById("image"+nRingsShowing).innerHTML = LimgLink;
-//		show_image("ring "+ring+".jpg","160","30",topx,left,ring,"col" + col.id + "pos" + col.count);
-	}
-	//we always remove only the top item
-	function removeringfromcolumn(col,ring) {
-//		colPos = colLocId(col, false);
-//		changeElementContent(colPos,"");
-		elid = "ring" + ring;
-		nRingsShowing--;
-//		$("#"+elid).hide("fast")
-		document.getElementById(elid).style.display = "none";
-	}
-	
-	function ringImageLink(ring,leftOffset) {
-		link = "<img src=\"Ring "+ring+".jpg\" style=\"position:absolute; width=160px; height=30px;";
-		if (leftOffset > 0) {
-			link += 'left = ' + leftOffset.toString() +'px;" />';
-		} else {
-			link +=  '" />'
-		}
-		return link;			
-	}
-	//returns the link for placing the ring number "ring" in column "colno" at position "pos" from bottom i.e. 1,2,3 etc.
-	function ringincolumnLink(ring,colno,pos) {
-		link = ringSrcLinks[ring - 1] + ringpos[(colno-1)*7+7-pos] + "\">"
-		return link;			
-	}
-	
-	function changeElementContent(elID,strToAdd) {
-		document.getElementById(elID).innerHTML = strToAdd;
-	}
-	
-	function debugMessage(msg) {
-	  if (debug != undefined) {
-		  alert(msg);
-	  }
-	}
-	
+	return({});
+}
+/**************************************************************  setspeed  ****************************************/
+function setspeed(newspeed){
+    speed = newspeed;  
+	document.getElementById("speedset").innerHTML="speed of animation set at "+speed;
+    // or maybe: var whichRadio = document.getElementById(gWhichCheckedId);
+    //do somethign with radioVal
+}
+
+/**************************************************************  nextAnim  ****************************************/
+
+function nextAnim(movearray){
+	ring = movearray[0];
+	from = movearray[1];
+	to = movearray[2];
+	elem = $("#ring"+ring);
+	up = 300 - 30*(colcount[from]-1);
+	uppx = "-="+up+"px"
+	sideways = 150*(to-from);
+	sidepx = "+="+sideways+"px";
+	down = 300- 30*(colcount[to]);
+	downpx = "+="+down+"px";
+	colcount[from]--;
+	colcount[to]++;
+	if (ring != undefined) 
+		{updateCounter(movearray);}
+	//myRadioFunc();
+	//alert("speed set to: "+speed);
+//	speed = 300;
+	elem.animate({top: uppx},speed).
+		animate({left: sidepx},speed).
+		animate({top: downpx},speed,function(){nextAnim(getNextMove());});
+}
+/**************************************************************  ProcessMoves  ****************************************/
+
 	//This is the callback function that parses the response
-/*	function ProcessMoves(xml) {
+	function ProcessMoves(xml) {
 		var i;
 		var list = "";
+		var tmove;
+		var cmove;
 		console.log("in ProcessMoves");
 		var xmlDoc = xml.responseXML;
 		if (xmlDoc == null) {
@@ -171,11 +112,17 @@
 		var x = xmlDoc.getElementsByTagName("move");
 		console.log(x.length);
 		for (i = 0; i <x.length; i++) { 
-			moves[moves.length] = x[i].childNodes[0].nodeValue;
-			console.log(i,moves.length,moves[moves.length-1]);
-			list += moves[moves.length-1];
+			cmove = new Array(3);
+			tmove = x[i].childNodes[0].nodeValue;
+			cmove[0] = Math.floor(tmove/100);
+			cmove[1] = Math.floor(tmove/10)%10;
+			cmove[2] = tmove%10;
+			moveslist[moveslist.length] = cmove;
+			console.log(i,moveslist.length,moveslist[moveslist.length-1]);
+			list += i+":"+moveslist[moveslist.length-1]+";";
 			}
 	}
+/**************************************************************  getMovesFromServer  ****************************************/
 	
 	//This the AJAX function that sends the request to the server
 	function getMovesFromServer(url,cfunc,n) {
@@ -189,94 +136,43 @@
 		xhttp.open("GET", url, false);
 		xhttp.send();
 	}
-*/	
+/**************************************************************  MoveRings  ****************************************/
 	function MoveRings() {
-		var i;
-		var x =  "y" //prompt("Debug (y or n:","n");
-		if (x =="y") {debug=true;}
-		// First let us put the rings in column 1 -->
-		var x = "3" //prompt("Number of rings:","0");
-		var quantity =  parseInt(x, 10);
-		//debugMessage("Number of rings = " + quantity);
-//		getMovesFromServer('/Tower?rings='+quantity,ProcessMoves,x)
-//		$.get('/Tower?rings='+quantity,ProcessMoves)
-//	Temporailky we are using predefined moves until I can solve the problem of connecting to the server by moving 
-//	the server to a different ip address
-		moves = moveslist[quantity-1]
-		for (i = quantity;i > 0 ;i--) {
-			col1.pushOn(i);
-			}
-		//debugMessage("images set");
-		for (i = 0; i <= moves.length;i++) {
-			var ringnum = Number(Number((moves[i])/100).toFixed(0));
-			var fromcol = Number(Number((moves[i]%100)/10).toFixed(0));
-			var tocol = moves[i]%10;
-			Slide(ringnum,fromcol,tocol);
-			}
-			//debugMessage("Move "+i+" done");
+	var i;
+	x = prompt("Number of rings:","0");
+	nRings =  parseInt(x, 10);
+	getMovesFromServer('/Tower?rings='+nRings,ProcessMoves,x)
+	colcount[1]=nRings;
+	for (i = nRings;i >= 1;i--) {
+	   col1.count++;
+	   showringInColumn(col1,i);
 	}
-/*	function animateRing(ring,ypos,colT) {
-        l = 5;
-		nIter = (colT.id - 1)*150/5;
-        for (i = 1;i <= nIter;i++) {
-			lval = 55 + l*i;
-			lnew = lval+'px'
-            div.slider{left: lnew}, 100);
-//			$("#slider").animate({left:lnew},100);
-        }
-		movefinished = true;
-		return;
-	}
-*/	
-	function slideDone() {
-		changeElementContent("slider","");
-		colT.pushOn(ring)
-		movedone = true
-	}
-	
-	function slideOneStep(lf) {
-		 document.getElementById("animate").style.left=lf;
-	}
-
-	function Slide(ring,colFr,colTo){
-		//debugMessage("Moving "+ring+" From column "+colFr+" To column "+colTo);
-		var colF,colT;
-		var ypos;
-		switch (colFr ) {
-			case 1: { colF = col1; break;}
-			case 2: { colF = col2; break;}
-			case 3: { colF = col3; break;}
-			default: { colF = undefined;}
-		}
-		switch (colTo) {
-			case 1: { colT = col1; break;}
-			case 2: { colT = col2; break;}
-			case 3: { colT = col3; break;}
-			default: { colT = undefined;}
-		}
-		colF.popOff();
-		changeElementContent("slider",ringImageLink(ring,55));
-		lcur = 55 + 150*(colFr - 1);
-        lnew = 55 + 150*(colTo - 1);
-		movedone = false;
-		for (lf = lcur;lf <= lnew;lf +=5) {
-			setTimeout(slideOneStep(lf),1000);
-		}
-		movedone=true;
-/*		$("#slider").animate({left:lnew},1000,function(){
-					changeElementContent("slider","");
-					colT.pushOn(ring);
-					movedone=true;
-*/	
-	}
-	</script>
- </head>
-  <body>
-  <h1><cente>Tower Of Bramha</center></h1><br>
-  <div id ="container">
-  <div id ="slider"></div></div>
-  <div style="position: absolute; top:150px; left:200px">
-  <img src="towers.jpg" id="towers" width="600" height="400" align=left alt="" title="" />
+	l=moveslist.length;
+	mov = getNextMove();
+	nextAnim(mov);
+}
+/**************************************************************  Showhelp  ****************************************/
+function Showhelp() {
+	window.open ("help.html","helpwindow","status=1");
+}
+</script>
+</head>
+<body>
+  <center>
+  <h1>Tower Of Bramha</h1>
+  </center>
+  <center>
+  <div id="rateOfAnimation";>
+    <input type="radio" name="rOA" id="rOA1" value="20" onClick="setspeed(this.value);"> Fast
+    <input type="radio" name="rOA" id="rOA2" value="250" onClick="setspeed(this.value);"> Medium
+    <input type="radio" name="rOA" id="rOA3" value="500" onClick="setspeed(this.value);"> Slow
+  </div>
+    <input type="button" onclick="MoveRings()" Value="Submit">
+	<input type="button" onclick="Showhelp()" Value="Help">
+  </center>
+  <h2 id="counter"></h2>
+  <div id="maincircus";style="position: absolute; top:150px; left:0px">
+  <img src="towers.jpg" id="towers" width="600" height="400" align:left alt="" title=""/>
   <div id="image1"></div>
   <div id="image2"></div>
   <div id="image3"></div>
@@ -285,10 +181,6 @@
   <div id="image6"></div>
   <div id="image7"></div>
   </div>
-
- <center>
-    <input type="button" onclick="MoveRings()" Value="Submit">
-  </center>
-  </body>
-
+  <p id="speedset"></p>
+</body>
 </html>
