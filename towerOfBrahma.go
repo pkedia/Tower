@@ -1,5 +1,5 @@
 // towerOfBrahma
-package Tower
+package main
 
 import (
 	"strconv"

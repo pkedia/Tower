@@ -6,7 +6,6 @@ import (
 	"time"
     "net/http"
 	"net/url"
-	"Tower"
 	"strconv"
 	"reflect"
 )
@@ -32,7 +31,7 @@ func runtower(w http.ResponseWriter, r *http.Request) {
 	sv := v[0]
 	fmt.Println(sv,reflect.TypeOf(sv),len(sv),sv[0])
 	nr,_ = strconv.Atoi(sv)
-	nm := Tower.TowerOfBramha(nr,&moves)
+	nm := TowerOfBramha(nr,&moves)
 	fmt.Println("No. of moves: ",nm)
 	for i := 0; i < nm;i += 10 {
 		for j := i; j < i + 10 && j < nm; j++ {

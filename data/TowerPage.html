@@ -5,7 +5,7 @@
 <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.4/jquery.min.js"></script>
 <head>
     <meta charset="utf-8">
-<script type="text/javascript" src="https://gc.kis.scr.kaspersky-labs.com/1B74BD89-2A22-4B93-B451-1C9E1052A0EC/main.js" charset="UTF-8"></script><script>
+<script>
 	var moveslist = [];
 	var ringSrcLinks = ["<img src=\"Ring 1.jpg\" id=\"ring1\" style=\"position:absolute; width=160px; height=30px;",
 						"<img src=\"Ring 2.jpg\" id=\"ring2\" style=\"position:absolute; width=160px; height=30px;",
@@ -33,6 +33,12 @@ var colcount = [0,0,0,0];
 var m = 0;
 var counter=0;
 var speed = 50;
+var doc;
+
+/**************************************************************  addTextToTextbox  ****************************************/
+function addTextToTextbox(msg) {
+	doc.write(msg);
+}
 
 /**************************************************************  updateCounter  ****************************************/
 function updateCounter(movearray) {
@@ -78,6 +84,11 @@ function nextAnim(movearray){
 	ring = movearray[0];
 	from = movearray[1];
 	to = movearray[2];
+	logentry = "ring"+ring+" from "+from+" to "+to;
+	if (ring != undefined)
+	    addTextToTextbox("<li>Moved ring "+ring+" from "+from+" to "+to+"</li>");
+	else
+		addTextToTextbox("</ol>");
 	elem = $("#ring"+ring);
 	up = 300 - 30*(colcount[from]-1);
 	uppx = "-="+up+"px"
@@ -85,8 +96,11 @@ function nextAnim(movearray){
 	sidepx = "+="+sideways+"px";
 	down = 300- 30*(colcount[to]);
 	downpx = "+="+down+"px";
+	logentry += " up,side,down,colcountfr,to "+up+","+sideways+","+down+","+colcount[from]+","+colcount[to];
 	colcount[from]--;
 	colcount[to]++;
+	logentry += ", after:"+colcount[from]+","+colcount[to];
+	console.log(logentry);
 	if (ring != undefined) 
 		{updateCounter(movearray);}
 	//myRadioFunc();
@@ -136,9 +150,38 @@ function nextAnim(movearray){
 		xhttp.open("GET", url, false);
 		xhttp.send();
 	}
+/****************************************  Cleanup  **********************************************/
+	function cleanup() {
+	    for (i = 1;i <=7;i++) {
+		  ringid = "#ring"+i;
+		  $(ringid).remove();
+		}
+		col1.count = 0;
+		col2.count = 0;
+		col3.count = 0;
+		nRingsShowing = 0;
+		for (i = 0;i < 4;i++) 
+			colcount[i] = 0;
+		m = 0;
+		counter=0;
+		//console.log("Moveslist before:",moveslist);
+		moveslist.splice(0,moveslist.length);
+		//console.log("Moveslist After:",moveslist);
+		/*doc = document.getElementById("textbox").contentWindow.document;
+		doc.open;
+		doc.write("");
+		doc.close;*/
+		var myIFrame = document.getElementById("textbox");
+		var content = myIFrame.contentWindow.document.body.innerHTML;    
+		content = "";
+}
+ 
 /**************************************************************  MoveRings  ****************************************/
 	function MoveRings() {
 	var i;
+	cleanup();
+	doc=document.getElementById('textbox').contentWindow.document;
+	doc.open();
 	x = prompt("Number of rings:","0");
 	nRings =  parseInt(x, 10);
 	getMovesFromServer('/Tower?rings='+nRings,ProcessMoves,x)
@@ -147,14 +190,28 @@ function nextAnim(movearray){
 	   col1.count++;
 	   showringInColumn(col1,i);
 	}
-	l=moveslist.length;
+	addTextToTextbox("<h2><center>List of Moves</center></h2><br><ol>");
 	mov = getNextMove();
 	nextAnim(mov);
+	doc.close;
 }
 /**************************************************************  Showhelp  ****************************************/
 function Showhelp() {
 	window.open ("help.html","helpwindow","status=1");
 }
+/* some stuff to use later
+This is to position a frame at a specific location:
+<div id="contentframe" style="position:relative; top: 160px; left: 0px;">
+<iframe src="http://stackoverflow.com" style="height:100%;width:100%;position:absolute;top:0px;bottom:0px;">&lt;/div&gt;
+</iframe></div>
+for adding text to a frameYou can of course do it one line style:
+var doc = document.getElementById('iframe').contentWindow.document;
+doc.open();
+doc.write('Test');
+doc.close();
+----- or -----
+$("#iframe").contents().find("body").append('Test');
+*/
 </script>
 </head>
 <body>
@@ -171,6 +228,7 @@ function Showhelp() {
 	<input type="button" onclick="Showhelp()" Value="Help">
   </center>
   <h2 id="counter"></h2>
+  <iframe scrolling="yes" width="600" height="500"  align="right" src="about:blank" id="textbox"></iframe>
   <div id="maincircus";style="position: absolute; top:150px; left:0px">
   <img src="towers.jpg" id="towers" width="600" height="400" align:left alt="" title=""/>
   <div id="image1"></div>
@@ -181,6 +239,7 @@ function Showhelp() {
   <div id="image6"></div>
   <div id="image7"></div>
   </div>
-  <p id="speedset"></p>
-</body>
+  <div id="myframe";style="position: absolute; top:150px; left:500px">
+  </div>
+ </body>
 </html>
