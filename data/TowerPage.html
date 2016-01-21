@@ -5,7 +5,18 @@
 <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.4/jquery.min.js"></script>
 <head>
     <meta charset="utf-8">
+	<style>
+
+h2 {
+    font-size: 25px;
+}
+
+h4 {
+    font-size: 18px;
+}
+</style>
 <script>
+	var ringNames = ["?","A","B","C"]
 	var moveslist = [];
 	var ringSrcLinks = ["<img src=\"Ring 1.jpg\" id=\"ring1\" style=\"position:absolute; width=160px; height=30px;",
 						"<img src=\"Ring 2.jpg\" id=\"ring2\" style=\"position:absolute; width=160px; height=30px;",
@@ -14,39 +25,152 @@
 						"<img src=\"Ring 5.jpg\" id=\"ring5\" style=\"position:absolute; width=160px; height=30px;",
 						"<img src=\"Ring 6.jpg\" id=\"ring6\" style=\"position:absolute; width=160px; height=30px;",
 						"<img src=\"Ring 7.jpg\" id=\"ring7\" style=\"position:absolute; width=160px; height=30px;"]
+//Browser type
+	var BrowserInUse = "unknown";
+// running Animation("demo" mode) or Game("Game" mode)
+	var mode;
+// Origin, Dest are the from and to columns in the game mode
+	var Origin, Dest;
+	var haveFrom,haveTo;
+	var UserMoves = [];
 //constants to position the rings correctly
-	var topposbase = 555;
+	var topposbase = 508;
 	var leftbase = 65;
+	var nRings;
+	var col1 = new column(1,0);
+	var col2 = new column(2,0);
+	var col3 = new column(3,0);
+	nRingsShowing = 0;
+	var colcount = [0,0,0,0];
+	var m = 0;
+	var counter=0;
+	var speed = 20;
+	var doc;
+	var moveslogbuf="";
+/*********************************************************************************************************************/
+/****************************************!!!!! Utility functions  !!!!!!**********************************************/
+/*********************************************************************************************************************/
+
+/**************************************************************  getPosition  ****************************************/
+// this function queries an element for its actual position on page, which may be different than what is specified.
+function getPosition(id) {
+    var xPosition = 0;
+    var yPosition = 0;
+  
+    element = document.getElementById(id);
+    while(element) {
+        xPosition += (element.offsetLeft - element.scrollLeft + element.clientLeft);
+        yPosition += (element.offsetTop - element.scrollTop + element.clientTop);
+        element = element.offsetParent;
+    }
+	var pos = {x:xPosition, y:yPosition};
+    return (pos);
+}
+
+/**************************************************************  BrowserType  ****************************************/
+function BrowserType() {
+	if (bowser.msie && bowser.version <= 6) {
+		BrowserInUse = "OldIE";
+	} else if (bowser.firefox){
+	    BrowserInUse = "FireFox";
+	} else if (bowser.chrome){
+	    BrowserInUse = "Chrome";
+		//topposbase -= 5;
+	} else if (bowser.safari){
+	    BrowserInUse = "Safari";
+	} else if(bowser.iphone || bowser.android){
+	    BrowserInUse = "Mobile";
+	}
+}
 
 /**************************************************************  column  ****************************************/
-
+// A column object constructor and prototype
 function column(id,count) {
 	this.id = id;
 	this.count = count;
+	this.ringstack = [];
 }
-var nRings;
-var col1 = new column(1,0);
-var col2 = new column(2,0);
-var col3 = new column(3,0);
-nRingsShowing = 0;
-var colcount = [0,0,0,0];
-var m = 0;
-var counter=0;
-var speed = 50;
-var doc;
 
+/**************************************************************  column  ****************************************/
+// This is used by cleanup function to reset the ring list in a column to nil
+function reset(col) {
+	col.count = 0;
+	col.ringstack.splice(0,3);
+	}
+	
+/**************************************************************   Topring  **********************************************/
+// This function peeks at the top element on a column
+function Topring(colno) {
+	if (colno == 1) 
+		col = col1;
+	else if (colno == 2)
+		col = col2;
+	else if (colno == 3)
+		col = col3;
+	r = col.ringstack[col.ringstack.length - 1];
+	return(r);
+}
+/**************************************************************   pushincol  **********************************************/
+// Pushes a new ring on the column stack
+function pushInCol(colno, ringno) {
+	if (colno == 1) 
+		col = col1;
+	if (colno == 2)
+		col = col2;
+	else if (colno == 3)
+		col = col3;
+	col.count++;
+	col.ringstack.push(ringno);
+}
+/**************************************************************   popfromcol  **********************************************/
+// Pops off the top element from the column
+function popFromCol(colno) {
+	if (colno == 1) 
+		col = col1;
+	if (colno == 2)
+		col = col2;
+	else if (colno == 3)
+		col = col3;
+	ring = col.ringstack.pop();
+	col.count--;
+	return ring;
+}
 /**************************************************************  addTextToTextbox  ****************************************/
+// This function adds a line of message to the right, primarily to show the moves made
 function addTextToTextbox(msg) {
 	doc.write(msg);
+	moveslogbuf += msg;
 }
 
+function replaceLogEntries(buf) {
+	doc.close();
+	var iframe_element = window.frames['textbox'];
+	iframe_element.document.open();
+	iframe_element.document.close();
+	doc=document.getElementById('textbox').contentWindow.document;
+	doc.open();
+	//we have to remove two entries because the undo move is also logged.
+	for (i=1;i<=2;i++) {
+		//first delete the last 4 characters that are <br>
+		newbuf = moveslogbuf.slice(0,moveslogbuf.length-4);
+		index = newbuf.lastIndexOf("</li>");
+		if (index > 0)
+			moveslogbuf = newbuf.slice(0,index+4);
+	}
+	addTextToTextbox(moveslogbuf);
+
+}
 /**************************************************************  updateCounter  ****************************************/
-function updateCounter(movearray) {
-	counter++;
+// this function keeps updating the number of moves shown on the page
+function updateCounter(n) {
+	if (n != 0)
+		counter++;
+	else
+		counter = 0;
 	document.getElementById("counter").innerHTML = "Number of moves made: "+counter;
 }
 /**************************************************************  showringInColumn  ****************************************/
-
+// Worker function to add a ring to a column and make it visible
 function showringInColumn(col,ring) {
 	LimgLink = ringincolumnLink(ring,col.id,col.count);
 	nRingsShowing++;
@@ -54,14 +178,14 @@ function showringInColumn(col,ring) {
 }
 
 /**************************************************************  ringincolumnLink  ****************************************/
-
+// This function computes the actial position where the ring needs to be displayed on the page 
 function ringincolumnLink(ring,colno,pos) {
 	posstr = "Top:"+(topposbase-(pos)*30)+"px; Left:"+(leftbase+150*(colno-1))+"px;\" />";
 	link = ringSrcLinks[ring - 1] + posstr;
 	return link;			
 }
 /**************************************************************  getNextMove  ****************************************/
-
+// This function keeps track of the moves and return the next move to be made in the demo mode(animation)
 function getNextMove(){
 	m += 1;
 	if (m <= moveslist.length) {
@@ -71,22 +195,24 @@ function getNextMove(){
 	return({});
 }
 /**************************************************************  setspeed  ****************************************/
+// To pick up teh speed parameter if the user selects a speed for animation.
 function setspeed(newspeed){
     speed = newspeed;  
-	document.getElementById("speedset").innerHTML="speed of animation set at "+speed;
+//	document.getElementById("speedset").innerHTML="speed of animation set at "+speed;
     // or maybe: var whichRadio = document.getElementById(gWhichCheckedId);
     //do somethign with radioVal
 }
 
 /**************************************************************  nextAnim  ****************************************/
-
+// This is the function  that performs the magic of animation.
 function nextAnim(movearray){
 	ring = movearray[0];
 	from = movearray[1];
 	to = movearray[2];
+	if (ring == undefined) return;
 	logentry = "ring"+ring+" from "+from+" to "+to;
 	if (ring != undefined)
-	    addTextToTextbox("<li>Moved ring "+ring+" from "+from+" to "+to+"</li>");
+	    addTextToTextbox("<li>Moved ring "+ring+" from "+ringNames[from]+" to "+ringNames[to]+"</li>");
 	else
 		addTextToTextbox("</ol>");
 	elem = $("#ring"+ring);
@@ -98,21 +224,26 @@ function nextAnim(movearray){
 	downpx = "+="+down+"px";
 	logentry += " up,side,down,colcountfr,to "+up+","+sideways+","+down+","+colcount[from]+","+colcount[to];
 	colcount[from]--;
+	pushInCol(to,popFromCol(from));
 	colcount[to]++;
 	logentry += ", after:"+colcount[from]+","+colcount[to];
 	console.log(logentry);
 	if (ring != undefined) 
-		{updateCounter(movearray);}
-	//myRadioFunc();
-	//alert("speed set to: "+speed);
-//	speed = 300;
+		{updateCounter();}
 	elem.animate({top: uppx},speed).
 		animate({left: sidepx},speed).
-		animate({top: downpx},speed,function(){nextAnim(getNextMove());});
+		animate({top: downpx},speed,function(){
+										if (mode == "Demo") 
+											nextAnim(getNextMove());
+										else if (col2.count == nRings) {
+											alert("Congratulations! You did it. You moved the rings from Column A to column B");
+											}
+
+										}
+				);
 }
 /**************************************************************  ProcessMoves  ****************************************/
-
-	//This is the callback function that parses the response
+//This is the callback function that parses the response from teh server
 	function ProcessMoves(xml) {
 		var i;
 		var list = "";
@@ -137,8 +268,7 @@ function nextAnim(movearray){
 			}
 	}
 /**************************************************************  getMovesFromServer  ****************************************/
-	
-	//This the AJAX function that sends the request to the server
+//This the AJAX function that sends the request to the server to run the program and return the moves.
 	function getMovesFromServer(url,cfunc,n) {
 		var xhttp;
 		xhttp=new XMLHttpRequest();
@@ -151,67 +281,179 @@ function nextAnim(movearray){
 		xhttp.send();
 	}
 /****************************************  Cleanup  **********************************************/
+// This function cleans up all the variables to get ready for the next animation or game.
 	function cleanup() {
 	    for (i = 1;i <=7;i++) {
 		  ringid = "#ring"+i;
 		  $(ringid).remove();
 		}
-		col1.count = 0;
-		col2.count = 0;
-		col3.count = 0;
+		reset(col1);
+		reset(col2);
+		reset(col3);
 		nRingsShowing = 0;
 		for (i = 0;i < 4;i++) 
 			colcount[i] = 0;
 		m = 0;
 		counter=0;
-		//console.log("Moveslist before:",moveslist);
+		topposbase = 508;
 		moveslist.splice(0,moveslist.length);
-		//console.log("Moveslist After:",moveslist);
-		/*doc = document.getElementById("textbox").contentWindow.document;
-		doc.open;
-		doc.write("");
-		doc.close;*/
-		var myIFrame = document.getElementById("textbox");
-		var content = myIFrame.contentWindow.document.body.innerHTML;    
-		content = "";
+		var iframe_element = window.frames['textbox'];
+		iframe_element.document.open();
+		iframe_element.document.close();
 }
- 
-/**************************************************************  MoveRings  ****************************************/
-	function MoveRings() {
-	var i;
-	cleanup();
-	doc=document.getElementById('textbox').contentWindow.document;
-	doc.open();
-	x = prompt("Number of rings:","0");
-	nRings =  parseInt(x, 10);
-	getMovesFromServer('/Tower?rings='+nRings,ProcessMoves,x)
-	colcount[1]=nRings;
-	for (i = nRings;i >= 1;i--) {
-	   col1.count++;
-	   showringInColumn(col1,i);
+
+/**************************************************************  initAnimation  ****************************************/
+// This function does the setup of the rings in the initial column
+	function initAnimation() {
+	var pos;
+		var ua = navigator.userAgent.toLowerCase();
+		/*var check = function(r) {
+			return r.test(ua);
+		};*/
+		if  (ua.search("firefox") > 0)
+			BrowserType = "firefox";
+		else if (ua.search("chrome") > 0) {
+			BrowserType = "chrome";
+			//topposbase -= 5;
+			}
+		//Get the actual position of the towers and calculate the topposbase
+		pos = getPosition("towers");
+		yPosition = pos.y;   //This is the upper left corner of the jpeg.
+		topposbase = yPosition +360;
+		x = prompt("Number of rings:","0");
+		nRings =  parseInt(x, 10);
+		colcount[1]=nRings;
+		for (i = nRings;i >= 1;i--) {
+		   col1.count++;
+		   col1.ringstack.push(i);
+		   showringInColumn(col1,i);
+		}
+		getPosition("ring3");
+		updateCounter(0);
 	}
-	addTextToTextbox("<h2><center>List of Moves</center></h2><br><ol>");
-	mov = getNextMove();
-	nextAnim(mov);
-	doc.close;
+/**************************************************************  UserPoke  ****************************************/
+// This function is primarily used to display messages to the user
+	function UserPoke(msg,color) {
+		if (color != undefined) {
+			newmsg = '<font color='+color+' size="4">'+msg+"</font>";
+			}
+		else
+			newmsg = '<font size="4">'+msg+"</font>";
+		document.getElementById("userPoke").innerHTML = newmsg;
+	}
+
+/**************************************** SetColumn **************************************************************/
+// This function is used in the game mode to process the columns selected for origin and destination and verifies taht the move is legit
+	function SetColumn(Id) {
+		if (!haveFrom) {
+			//check and make sure that the column is not empty-cells
+			if (colcount[Id] == 0) {
+				UserPoke("There are no rings on column "+Id+", Please select again","Red");
+				return;
+			}
+			Origin = Id;
+			haveFrom = true;
+			UserPoke("The column to move the ring from is "+Origin);
+		}
+		else if (Origin == Id) {
+			Origin == -1;  //unselect From column
+			haveFrom = false;
+			UserPoke("The column to move the ring from is unselected, select again");
+		}
+		else  {
+		// Apparently we are selecting a column to move to, check and make sure that we are not
+		//  putting a larger ring on a smaller ring
+			if (Topring(Origin) > Topring(Id)) {
+				UserPoke("You cannot move a larger ring on top of a smaller, please choose Destination again. To start over click on the From column again to deselect","Red");
+			}
+			else {
+				Dest = Id
+				haveTo = true;
+				}
+		}
+		if (haveFrom && haveTo)
+			MakeUserMove();
+	}
+	
+/**************************************** Undo **************************************************************/
+// This function Undoes the last completed move and resets all selection of column
+	function Undo() {
+		var moveToMake = UserMoves[UserMoves.length - 1];
+		//if there is only one move left to do then restart the game
+		if (UserMoves.length == 1) {
+			runGame();
+			return
+		}
+		//swap Origin and Dest
+		t = moveToMake[1];
+		moveToMake[1] = moveToMake[2];
+		moveToMake[2] = t;
+		nextAnim(moveToMake);
+		origin = 0;
+		dest = 0;
+		haveFrom = false;
+		haveTo = false;
+		UserMoves.pop();
+		//remove last move from the log window
+		replaceLogEntries();
 }
+
+/**************************************** Undo **************************************************************/
+// This function resets all to beginning of the game
+	function RestartGame() {
+		runGame();
+	}
+	
+/**************************************** MakeUserMove **************************************************************/
+// This function takes the user specified move and invokes the fuction doies the animation magic.
+	function MakeUserMove() {
+		var moveToMake = [Topring(Origin),Origin,Dest];
+		nextAnim(moveToMake);
+		origin = 0;
+		dest = 0;
+		haveFrom = false;
+		haveTo = false;
+		UserMoves[UserMoves.length] = moveToMake;
+	}
+
+/**************************************************************  runGame  ****************************************/
+// Entry function for running Game called by the Game button onclick
+	function runGame() {
+		mode = "Game";
+		cleanup();
+		doc=document.getElementById('textbox').contentWindow.document;
+		doc.open();
+		addTextToTextbox("<h2><center>List of Moves</center></h2><br><ol>");
+		initAnimation(nRings);
+		haveFrom = false;
+		//Set up is done, ask the user to start selecting moves and start making  moves
+		UserPoke("To proceed select the column to move ring from","Green");
+	}
+	
+/**************************************************************  runAnimation  ****************************************/
+// Entry function for running teh Demo(Animation of the specified number of rings.
+	function runAnimation() {
+		var i;
+		mode = "Demo";
+		cleanup();
+		doc=document.getElementById('textbox').contentWindow.document;
+		doc.open();
+		initAnimation(nRings);
+		UserPoke("We will move "+nRings+" from column A to column B","Red");
+		getMovesFromServer('/Tower?rings='+nRings,ProcessMoves,x)
+		addTextToTextbox("<h2><center>List of Moves</center></h2><br><ol>");
+		mov = getNextMove();
+		nextAnim(mov);
+		doc.close;
+	}
 /**************************************************************  Showhelp  ****************************************/
-function Showhelp() {
-	window.open ("help.html","helpwindow","status=1");
+// Display help for either Animation or the Game
+function Showhelp(whichkind) {
+	if (whichkind == "Demo")
+		window.open ("helpAnim.html","helpwindow","status=1");
+	else
+		window.open ("helpGame.html","helpwindow","status=1");
 }
-/* some stuff to use later
-This is to position a frame at a specific location:
-<div id="contentframe" style="position:relative; top: 160px; left: 0px;">
-<iframe src="http://stackoverflow.com" style="height:100%;width:100%;position:absolute;top:0px;bottom:0px;">&lt;/div&gt;
-</iframe></div>
-for adding text to a frameYou can of course do it one line style:
-var doc = document.getElementById('iframe').contentWindow.document;
-doc.open();
-doc.write('Test');
-doc.close();
------ or -----
-$("#iframe").contents().find("body").append('Test');
-*/
 </script>
 </head>
 <body>
@@ -224,13 +466,25 @@ $("#iframe").contents().find("body").append('Test');
     <input type="radio" name="rOA" id="rOA2" value="250" onClick="setspeed(this.value);"> Medium
     <input type="radio" name="rOA" id="rOA3" value="500" onClick="setspeed(this.value);"> Slow
   </div>
-    <input type="button" onclick="MoveRings()" Value="Submit">
-	<input type="button" onclick="Showhelp()" Value="Help">
+    <input type="button" onclick="runAnimation();" Value="Animation";>
+	<input type="button" onclick="Showhelp('Demo');" Value="Help";><br>
+	<input type="button" onclick="runGame();" Value="Game";>
+	<input type="button" onclick="Undo()" Value="Undo";>
+	<input type="button" onclick="runGame();" Value="Restart";>
+	<input type="button" onclick="Showhelp('Game');" Value="Help";><br>
   </center>
-  <h2 id="counter"></h2>
-  <iframe scrolling="yes" width="600" height="500"  align="right" src="about:blank" id="textbox"></iframe>
+  <iframe scrolling="yes" width="300" height="450"  align="right" src="about:blank" id="textbox" name="textbox"></iframe>
   <div id="maincircus";style="position: absolute; top:150px; left:0px">
   <img src="towers.jpg" id="towers" width="600" height="400" align:left alt="" title=""/>
+	<input type="button" onclick='SetColumn(1)' Value="Column A" style="position: absolute; left: 110px; top: 630px; ">
+	<input type="button" onclick='SetColumn(2)'Value="Column B" style="position: absolute; left: 260px; top: 630px; ">
+	<input type="button" onclick='SetColumn(3)' Value="Column C" style="position: absolute; left: 410px; top: 630px; ">
+ <table id="outputBar" style="position: absolute; left: 110px; top: 680px; " width=75%>
+ <tr>
+ <td width="45%"> <h2 id="counter">Number of Moves made:</h2> </td>
+ <td width="55%"> <h4 id="userPoke">Poke</h4> </td>
+ </tr>
+ </table>
   <div id="image1"></div>
   <div id="image2"></div>
   <div id="image3"></div>
@@ -239,7 +493,5 @@ $("#iframe").contents().find("body").append('Test');
   <div id="image6"></div>
   <div id="image7"></div>
   </div>
-  <div id="myframe";style="position: absolute; top:150px; left:500px">
-  </div>
- </body>
+</body>
 </html>

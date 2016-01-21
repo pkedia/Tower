@@ -1,0 +1,25 @@
+<center><h1>Tower of Bramha</h1></center>
+<p>Tower of Bramha is also referred to as Tower of Babel. This is a classic problem to demostrate the recursive algorithms.
+The basic problem is move a given number of Rings, usually between 3 and 7, that are placed in the first column order such 
+that the widest ring is at the bottom and decreasing to the smallest at the top.</p>
+<p>Objective of the game is to move the stack of the rings to another column using the third column as a temporary holding spot in the least number of moves.</p>
+<p>Here are the basic rules of the game.</p>
+<ul>
+<li>Only one ring can be moved at one time.</li>
+<li>A larger ring cannot be put on top of a smaller ring</li>
+</ul>
+<h3>Objective of the Game</h3>
+<p>The idea is to think of the problem in its most basic steps. Say we are moving the rings to column B. So the largest ring which is at the bottom in column A will have to go
+to the bottom of column B. This is possible if we can move the top 6 rings to column C and then we can move ring 7 to column B and after that we can move back the 6 rings from column C to Column B.
+Thinking this problem further we can see that we need to move top 5 rings first to column B and then move ring 6 to column C and there after we can move those 5 rings to column c. So 
+you get the idea that we need to keep analyzing this down to a single ring and reverse the process from there.</p>
+<h3>How to Play the Game</h3>
+<p>We have put together this game for you to try your hand at solving the problem of moving the stack of rings from column 'A' to column 'B'.
+Click on  the 'Game' button which will ask you for the number of rings you want to play with. Your display will be setup for you to start moving rings. You see the tree buttons labeled 
+Column A, Column B and Column C. You are to select a column to move the top ring from and then you click on a destination column. If the move is valid you will see the ring moving from 
+your column to the chosen destination column. You keep repeating these steps until the task is accomplished. As soon as you make the final move a pop upper-alpha
+dialog box will congratulate you and you will also the list of moves you made on the right hand panel. These moves are shown eaach time you make a move.</p>
+<h3>Undo Move</h3>
+You may have some moves that you might feel were not right. So you have the undo button that will let you undo the last move you made. You can continue undoing the moves all the back or 
+you can click Rest to start again.
+<center><h2>Have fun</h2></center>
