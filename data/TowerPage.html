@@ -47,6 +47,7 @@ h4 {
 	var speed = 20;
 	var doc;
 	var moveslogbuf="";
+	var audio=new Audio('fanfare.wav');
 /*********************************************************************************************************************/
 /****************************************!!!!! Utility functions  !!!!!!**********************************************/
 /*********************************************************************************************************************/
@@ -135,6 +136,50 @@ function popFromCol(colno) {
 	col.count--;
 	return ring;
 }
+
+/**************************************************************  setspeed  ****************************************/
+// To pick up teh speed parameter if the user selects a speed for animation.
+function setspeed(newspeed){
+    speed = newspeed;  
+//	document.getElementById("speedset").innerHTML="speed of animation set at "+speed;
+    // or maybe: var whichRadio = document.getElementById(gWhichCheckedId);
+    //do somethign with radioVal
+}
+
+/**************************************************************  ringincolumnLink  ****************************************/
+// This function computes the actial position where the ring needs to be displayed on the page 
+function ringincolumnLink(ring,colno,pos) {
+	posstr = "Top:"+(topposbase-(pos)*30)+"px; Left:"+(leftbase+150*(colno-1))+"px;\" />";
+	link = ringSrcLinks[ring - 1] + posstr;
+	return link;			
+}
+
+/**************************************************************  getNextMove  ****************************************/
+// This function keeps track of the moves and return the next move to be made in the demo mode(animation)
+function getNextMove(){
+	m += 1;
+	if (m <= moveslist.length) {
+	    mov = moveslist[m-1];
+		return(mov);
+	}
+	return({});
+}
+
+/**************************************************************  UserPoke  ****************************************/
+// This function is primarily used to display messages to the user
+	function UserPoke(msg,color) {
+		if (color != undefined) {
+			newmsg = '<font color='+color+' size="4">'+msg+"</font>";
+			}
+		else
+			newmsg = '<font size="4">'+msg+"</font>";
+		document.getElementById("userPoke").innerHTML = newmsg;
+	}
+
+/*********************************************************************************************************************/
+/****************************************!!!!! Display functions  !!!!!!**********************************************/
+/*********************************************************************************************************************/
+
 /**************************************************************  addTextToTextbox  ****************************************/
 // This function adds a line of message to the right, primarily to show the moves made
 function addTextToTextbox(msg) {
@@ -142,6 +187,8 @@ function addTextToTextbox(msg) {
 	moveslogbuf += msg;
 }
 
+/**************************************************************  replaceLogEntries  ****************************************/
+// This function replaces the log entries in the right panel with the cached log. Used for removing last move in Undo
 function replaceLogEntries(buf) {
 	doc.close();
 	var iframe_element = window.frames['textbox'];
@@ -158,7 +205,6 @@ function replaceLogEntries(buf) {
 			moveslogbuf = newbuf.slice(0,index+4);
 	}
 	addTextToTextbox(moveslogbuf);
-
 }
 /**************************************************************  updateCounter  ****************************************/
 // this function keeps updating the number of moves shown on the page
@@ -177,31 +223,7 @@ function showringInColumn(col,ring) {
 	document.getElementById("image"+nRingsShowing).innerHTML = LimgLink;
 }
 
-/**************************************************************  ringincolumnLink  ****************************************/
-// This function computes the actial position where the ring needs to be displayed on the page 
-function ringincolumnLink(ring,colno,pos) {
-	posstr = "Top:"+(topposbase-(pos)*30)+"px; Left:"+(leftbase+150*(colno-1))+"px;\" />";
-	link = ringSrcLinks[ring - 1] + posstr;
-	return link;			
-}
-/**************************************************************  getNextMove  ****************************************/
-// This function keeps track of the moves and return the next move to be made in the demo mode(animation)
-function getNextMove(){
-	m += 1;
-	if (m <= moveslist.length) {
-	    mov = moveslist[m-1];
-		return(mov);
-	}
-	return({});
-}
-/**************************************************************  setspeed  ****************************************/
-// To pick up teh speed parameter if the user selects a speed for animation.
-function setspeed(newspeed){
-    speed = newspeed;  
-//	document.getElementById("speedset").innerHTML="speed of animation set at "+speed;
-    // or maybe: var whichRadio = document.getElementById(gWhichCheckedId);
-    //do somethign with radioVal
-}
+// All the animation magic happens here )******************************///////////////////////////////////////////////
 
 /**************************************************************  nextAnim  ****************************************/
 // This is the function  that performs the magic of animation.
@@ -236,14 +258,20 @@ function nextAnim(movearray){
 										if (mode == "Demo") 
 											nextAnim(getNextMove());
 										else if (col2.count == nRings) {
+											audio.play();
 											alert("Congratulations! You did it. You moved the rings from Column A to column B");
 											}
 
 										}
 				);
 }
+
+/*********************************************************************************************************************/
+/****************************************!!!!! Server functions  !!!!!!**********************************************/
+/*********************************************************************************************************************/
+
 /**************************************************************  ProcessMoves  ****************************************/
-//This is the callback function that parses the response from teh server
+//This is the callback function that parses the response from the server
 	function ProcessMoves(xml) {
 		var i;
 		var list = "";
@@ -267,6 +295,7 @@ function nextAnim(movearray){
 			list += i+":"+moveslist[moveslist.length-1]+";";
 			}
 	}
+	
 /**************************************************************  getMovesFromServer  ****************************************/
 //This the AJAX function that sends the request to the server to run the program and return the moves.
 	function getMovesFromServer(url,cfunc,n) {
@@ -280,6 +309,11 @@ function nextAnim(movearray){
 		xhttp.open("GET", url, false);
 		xhttp.send();
 	}
+
+/*********************************************************************************************************************/
+/****************************************!!!!! Startup functions  !!!!!!**********************************************/
+/*********************************************************************************************************************/
+	
 /****************************************  Cleanup  **********************************************/
 // This function cleans up all the variables to get ready for the next animation or game.
 	function cleanup() {
@@ -331,17 +365,11 @@ function nextAnim(movearray){
 		getPosition("ring3");
 		updateCounter(0);
 	}
-/**************************************************************  UserPoke  ****************************************/
-// This function is primarily used to display messages to the user
-	function UserPoke(msg,color) {
-		if (color != undefined) {
-			newmsg = '<font color='+color+' size="4">'+msg+"</font>";
-			}
-		else
-			newmsg = '<font size="4">'+msg+"</font>";
-		document.getElementById("userPoke").innerHTML = newmsg;
-	}
 
+/*********************************************************************************************************************/
+/****************************************!!!!! GameMode functions  !!!!!!*********************************************/
+/*********************************************************************************************************************/
+	
 /**************************************** SetColumn **************************************************************/
 // This function is used in the game mode to process the columns selected for origin and destination and verifies taht the move is legit
 	function SetColumn(Id) {
@@ -398,7 +426,7 @@ function nextAnim(movearray){
 		replaceLogEntries();
 }
 
-/**************************************** Undo **************************************************************/
+/**************************************** RestartGame **************************************************************/
 // This function resets all to beginning of the game
 	function RestartGame() {
 		runGame();
@@ -429,6 +457,10 @@ function nextAnim(movearray){
 		//Set up is done, ask the user to start selecting moves and start making  moves
 		UserPoke("To proceed select the column to move ring from","Green");
 	}
+/*********************************************************************************************************************/
+/****************************************!!!!! Animation functions  !!!!!!********************************************/
+/*********************************************************************************************************************/
+	
 	
 /**************************************************************  runAnimation  ****************************************/
 // Entry function for running teh Demo(Animation of the specified number of rings.
