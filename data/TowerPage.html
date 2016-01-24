@@ -183,6 +183,8 @@ function getNextMove(){
 /**************************************************************  addTextToTextbox  ****************************************/
 // This function adds a line of message to the right, primarily to show the moves made
 function addTextToTextbox(msg) {
+	if (mode=="undo")
+		return;
 	doc.write(msg);
 	moveslogbuf += msg;
 }
@@ -196,21 +198,19 @@ function replaceLogEntries(buf) {
 	iframe_element.document.close();
 	doc=document.getElementById('textbox').contentWindow.document;
 	doc.open();
-	//we have to remove two entries because the undo move is also logged.
-	for (i=1;i<=2;i++) {
-		//first delete the last 4 characters that are <br>
-		newbuf = moveslogbuf.slice(0,moveslogbuf.length-4);
-		index = newbuf.lastIndexOf("</li>");
-		if (index > 0)
-			moveslogbuf = newbuf.slice(0,index+4);
-	}
-	addTextToTextbox(moveslogbuf);
+	//first delete the last 4 characters that are </li>
+	newbuf = moveslogbuf.slice(0,moveslogbuf.length-5);
+	index = newbuf.lastIndexOf("</li>");
+	if (index > 0)
+		moveslogbuf = newbuf.slice(0,index+5);
+	//addTextToTextbox(moveslogbuf);
+	doc.write(moveslogbuf);
 }
 /**************************************************************  updateCounter  ****************************************/
 // this function keeps updating the number of moves shown on the page
 function updateCounter(n) {
 	if (n != 0)
-		counter++;
+		counter += n;
 	else
 		counter = 0;
 	document.getElementById("counter").innerHTML = "Number of moves made: "+counter;
@@ -223,6 +223,9 @@ function showringInColumn(col,ring) {
 	document.getElementById("image"+nRingsShowing).innerHTML = LimgLink;
 }
 
+/*********************************************************************************************************************/
+/****************************************!!!!! Animation function  !!!!!!*********************************************/
+/*********************************************************************************************************************/
 // All the animation magic happens here )******************************///////////////////////////////////////////////
 
 /**************************************************************  nextAnim  ****************************************/
@@ -251,7 +254,7 @@ function nextAnim(movearray){
 	logentry += ", after:"+colcount[from]+","+colcount[to];
 	console.log(logentry);
 	if (ring != undefined) 
-		{updateCounter();}
+		{if (mode != "undo") updateCounter(1);}
 	elem.animate({top: uppx},speed).
 		animate({left: sidepx},speed).
 		animate({top: downpx},speed,function(){
@@ -406,6 +409,7 @@ function nextAnim(movearray){
 /**************************************** Undo **************************************************************/
 // This function Undoes the last completed move and resets all selection of column
 	function Undo() {
+		mode="undo";
 		var moveToMake = UserMoves[UserMoves.length - 1];
 		//if there is only one move left to do then restart the game
 		if (UserMoves.length == 1) {
@@ -424,6 +428,8 @@ function nextAnim(movearray){
 		UserMoves.pop();
 		//remove last move from the log window
 		replaceLogEntries();
+		updateCounter(-1);
+		mode = "game"
 }
 
 /**************************************** RestartGame **************************************************************/
