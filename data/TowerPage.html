@@ -16,7 +16,7 @@ h4 {
 }
 </style>
 <script>
-	var ringNames = ["?","A","B","C"]
+	var colNames = ["?","A","B","C"]
 	var moveslist = [];
 	var ringSrcLinks = ["<img src=\"Ring 1.jpg\" id=\"ring1\" style=\"position:absolute; width=160px; height=30px;",
 						"<img src=\"Ring 2.jpg\" id=\"ring2\" style=\"position:absolute; width=160px; height=30px;",
@@ -141,6 +141,7 @@ function popFromCol(colno) {
 // To pick up teh speed parameter if the user selects a speed for animation.
 function setspeed(newspeed){
     speed = newspeed;  
+	Hovermsg("New Speed is "+speed,"Green");
 //	document.getElementById("speedset").innerHTML="speed of animation set at "+speed;
     // or maybe: var whichRadio = document.getElementById(gWhichCheckedId);
     //do somethign with radioVal
@@ -174,6 +175,17 @@ function getNextMove(){
 		else
 			newmsg = '<font size="4">'+msg+"</font>";
 		document.getElementById("userPoke").innerHTML = newmsg;
+	}
+
+/**************************************************************  Hovermsg  ****************************************/
+// This function is primarily used to display messages to the user
+	function Hovermsg(msg,color) {
+		if (color != undefined) {
+			newmsg = '<font color='+color+' size="4">'+msg+"</font>";
+			}
+		else
+			newmsg = '<font size="4">'+msg+"</font>";
+		document.getElementById("hovering").innerHTML = newmsg;
 	}
 
 /*********************************************************************************************************************/
@@ -214,13 +226,25 @@ function updateCounter(n) {
 	else
 		counter = 0;
 	document.getElementById("counter").innerHTML = "Number of moves made: "+counter;
-}
+} 
 /**************************************************************  showringInColumn  ****************************************/
 // Worker function to add a ring to a column and make it visible
 function showringInColumn(col,ring) {
 	LimgLink = ringincolumnLink(ring,col.id,col.count);
 	nRingsShowing++;
-	document.getElementById("image"+nRingsShowing).innerHTML = LimgLink;
+	document.getElementById("image"+ring).innerHTML = LimgLink;
+}
+
+/**************************************************************  setRingSelected  ****************************************/
+// We set aring with the selected pattern if bset is true otherwise set it back to norman
+function setRingSelected(col,bset) {
+	r = Topring(col);
+	LimgLink = ringincolumnLink(r,col,colcount[col]);
+	if (bset) 
+		newstr=LimgLink.replace(".jpg","S.jpg");
+	else
+		newstr = LimgLink;
+	document.getElementById("image"+r).innerHTML = newstr;
 }
 
 /*********************************************************************************************************************/
@@ -235,9 +259,10 @@ function nextAnim(movearray){
 	from = movearray[1];
 	to = movearray[2];
 	if (ring == undefined) return;
+	setRingSelected(from,false);
 	logentry = "ring"+ring+" from "+from+" to "+to;
 	if (ring != undefined)
-	    addTextToTextbox("<li>Moved ring "+ring+" from "+ringNames[from]+" to "+ringNames[to]+"</li>");
+	    addTextToTextbox("<li>Moved ring "+ring+" from "+colNames[from]+" to "+colNames[to]+"</li>");
 	else
 		addTextToTextbox("</ol>");
 	elem = $("#ring"+ring);
@@ -255,6 +280,7 @@ function nextAnim(movearray){
 	console.log(logentry);
 	if (ring != undefined) 
 		{if (mode != "undo") updateCounter(1);}
+	Hovermsg("speed set to "+speed,"Red");
 	elem.animate({top: uppx},speed).
 		animate({left: sidepx},speed).
 		animate({top: downpx},speed,function(){
@@ -384,9 +410,11 @@ function nextAnim(movearray){
 			}
 			Origin = Id;
 			haveFrom = true;
+			setRingSelected(Origin,true);
 			UserPoke("The column to move the ring from is "+Origin);
 		}
 		else if (Origin == Id) {
+			setRingSelected(Origin,false);
 			Origin == -1;  //unselect From column
 			haveFrom = false;
 			UserPoke("The column to move the ring from is unselected, select again");
@@ -400,6 +428,7 @@ function nextAnim(movearray){
 			else {
 				Dest = Id
 				haveTo = true;
+				UserPoke("Moved ring "+Topring(Origin)+" to column "+colNames[Dest]);
 				}
 		}
 		if (haveFrom && haveTo)
@@ -477,7 +506,7 @@ function nextAnim(movearray){
 		doc=document.getElementById('textbox').contentWindow.document;
 		doc.open();
 		initAnimation(nRings);
-		UserPoke("We will move "+nRings+" from column A to column B","Red");
+		UserPoke("We will move "+nRings+" rings from column A to column B","Red");
 		getMovesFromServer('/Tower?rings='+nRings,ProcessMoves,x)
 		addTextToTextbox("<h2><center>List of Moves</center></h2><br><ol>");
 		mov = getNextMove();
@@ -493,6 +522,8 @@ function Showhelp(whichkind) {
 		window.open ("helpGame.html","helpwindow","status=1");
 }
 </script>
+<link rel="icon" href="favicon.ico" type="image/x-icon" />
+<link rel="shortcut icon" href="favicon.ico" type="image/x-icon" />
 </head>
 <body>
   <center>
@@ -513,15 +544,24 @@ function Showhelp(whichkind) {
   </center>
   <iframe scrolling="yes" width="300" height="450"  align="right" src="about:blank" id="textbox" name="textbox"></iframe>
   <div id="maincircus";style="position: absolute; top:150px; left:0px">
-  <img src="towers.jpg" id="towers" width="600" height="400" align:left alt="" title=""/>
-	<input type="button" onclick='SetColumn(1)' Value="Column A" style="position: absolute; left: 110px; top: 630px; ">
-	<input type="button" onclick='SetColumn(2)'Value="Column B" style="position: absolute; left: 260px; top: 630px; ">
-	<input type="button" onclick='SetColumn(3)' Value="Column C" style="position: absolute; left: 410px; top: 630px; ">
- <table id="outputBar" style="position: absolute; left: 110px; top: 680px; " width=75%>
+  <img src="towers.jpg" id="towers" width="600" height="400" align:left alt="" title="" USEMAP="#map1"/>
+  <map NAME="map1">
+	<area SHAPE=RECT COORDS="130,110,150,360" onClick="SetColumn(1)" onMouseOver='Hovermsg("click to select Column A")'
+		onMouseOut="Hovermsg('')">
+	<area SHAPE=RECT COORDS="280,110,300,360" onClick="SetColumn(2)" onMouseOver='Hovermsg("click to select Column B")'
+		onMouseOut="Hovermsg('')">
+	<area SHAPE=RECT COORDS="430,110,450,360" onClick="SetColumn(3)" onMouseOver='Hovermsg("click to select Column C")'
+		onMouseOut="Hovermsg('')">
+  </map>
+ <table id="outputBar" style="position: absolute; left: 110px; top: 530px; " width=75%>
  <tr>
- <td width="45%"> <h2 id="counter">Number of Moves made:</h2> </td>
- <td width="55%"> <h4 id="userPoke">Poke</h4> </td>
+ <h2 id="counter">Number of Moves made:</h2>
  </tr>
+ <tr>
+ <h3 id="userPoke">Poke</h4>
+ </tr>
+ <tr>
+ <h3 id="hovering"></h3></tr>
  </table>
   <div id="image1"></div>
   <div id="image2"></div>
