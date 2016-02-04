@@ -3,6 +3,7 @@
 
 <html>
 <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.4/jquery.min.js"></script>
+<script type="text/javascript" src="bowser.min.js"></script>
 <head>
     <meta charset="utf-8">
 	<style>
@@ -37,9 +38,9 @@ h4 {
 	var topposbase = 508;
 	var leftbase = 65;
 	var nRings;
-	var col1 = new column(1,0);
-	var col2 = new column(2,0);
-	var col3 = new column(3,0);
+	var col1 = new stack("A",1,0);
+	var col2 = new stack("B",2,0);
+	var col3 = new stack("C",3,0);
 	nRingsShowing = 0;
 	var colcount = [0,0,0,0];
 	var m = 0;
@@ -48,6 +49,81 @@ h4 {
 	var doc;
 	var moveslogbuf="";
 	var audio=new Audio('fanfare.wav');
+/*********************************************************************************************************************/
+/****************************************!!!!! Tower of Bramha Algorithm  !!!!!!**************************************/
+/*********************************************************************************************************************/
+function stack(name,ID,cnt) {
+	this.name = name;
+	this.ID = ID;
+	this.count = cnt;
+	this.rings =  [];
+	};
+
+stack.prototype.pop = function pop(){
+	if (this.count == 0) {
+		console.log("POP: stack "+this.name+" is empty");
+		return undefined;
+	} else {
+		this.count--
+		x = this.rings.pop();
+		console.log("Pop::Popped "+x+" off the stack "+this.name+" this.count is"+this.count);
+		return x
+	}
+}
+
+stack.prototype.push = function(n) {
+		if (this.count == 0) {
+			this.rings[this.count] = n
+			this.count++
+			return
+		} else {
+			if (this.rings[this.count-1] > n) {
+				this.rings[this.count] = n
+				this.count++
+				return
+			} else {
+			console.log("Push::the ring to be moved is bigger than the one on top");
+			return
+			}
+	}
+}
+	
+var A = new stack("A",1,0);
+var B = new stack("B",2,0);
+var T = new stack("T",3,0);
+var hmany 
+var nmoves
+var aMoves = [];
+
+function shiftOne(From, To) {
+	console.log("---->SShiftOne::Moving one ring no.",From.rings[From.count - 1]," from stack ",From.name," to stack ",To.name)
+	ringnum = From.rings[From.count - 1]
+	from = From.ID
+	to = To.ID
+	moveslist[nmoves] = [ringnum,from,to];
+	nmoves++
+	rN = From.pop()
+	if (rN != undefined)
+		To.push(rN)
+}
+
+function MoveRings(From,HM,To,Using) {
+	console.log("MoveRings::Moving ",HM," Rings from ",From.name," To ",To.name," Using ",Using.name)
+	if (HM > 1) {MoveRings(From,HM-1,Using,To)}
+	shiftOne(From,To)
+	if (HM > 1) {MoveRings(Using,HM-1,To,From)}
+}
+
+function TowerOfBramha(nRings, moves){
+	nmoves = 0
+	hmany = nRings
+	for (i = hmany;i > 0;i--) {A.push(i)}
+	//Now we do a recursive function to move rings from A to C using B
+	MoveRings(A,hmany,B,T)
+	return nmoves
+}
+
+
 /*********************************************************************************************************************/
 /****************************************!!!!! Utility functions  !!!!!!**********************************************/
 /*********************************************************************************************************************/
@@ -84,21 +160,13 @@ function BrowserType() {
 	}
 }
 
-/**************************************************************  column  ****************************************/
-// A column object constructor and prototype
-function column(id,count) {
-	this.id = id;
-	this.count = count;
-	this.ringstack = [];
-}
-
-/**************************************************************  column  ****************************************/
+/**************************************************************  reset  ****************************************/
 // This is used by cleanup function to reset the ring list in a column to nil
 function reset(col) {
 	col.count = 0;
-	col.ringstack.splice(0,3);
+	col.rings.splice(0,col.rings.length);
 	}
-	
+
 /**************************************************************   Topring  **********************************************/
 // This function peeks at the top element on a column
 function Topring(colno) {
@@ -108,35 +176,18 @@ function Topring(colno) {
 		col = col2;
 	else if (colno == 3)
 		col = col3;
-	r = col.ringstack[col.ringstack.length - 1];
+	r = col.rings[col.rings.length - 1];
 	return(r);
 }
-/**************************************************************   pushincol  **********************************************/
-// Pushes a new ring on the column stack
-function pushInCol(colno, ringno) {
+function Column(colno) {
 	if (colno == 1) 
 		col = col1;
 	if (colno == 2)
 		col = col2;
 	else if (colno == 3)
 		col = col3;
-	col.count++;
-	col.ringstack.push(ringno);
+	return col;
 }
-/**************************************************************   popfromcol  **********************************************/
-// Pops off the top element from the column
-function popFromCol(colno) {
-	if (colno == 1) 
-		col = col1;
-	if (colno == 2)
-		col = col2;
-	else if (colno == 3)
-		col = col3;
-	ring = col.ringstack.pop();
-	col.count--;
-	return ring;
-}
-
 /**************************************************************  setspeed  ****************************************/
 // To pick up teh speed parameter if the user selects a speed for animation.
 function setspeed(newspeed){
@@ -179,13 +230,20 @@ function getNextMove(){
 
 /**************************************************************  Hovermsg  ****************************************/
 // This function is primarily used to display messages to the user
-	function Hovermsg(msg,color) {
+	function Hovermsg(msg,col,color) {
 		if (color != undefined) {
-			newmsg = '<font color='+color+' size="4">'+msg+"</font>";
+			newmsg = '<font color='+color+' size="4">'+msg+col+"</font>";
 			}
 		else
-			newmsg = '<font size="4">'+msg+"</font>";
+			newmsg = '<font size="4">'+msg+col+"</font>";
 		document.getElementById("hovering").innerHTML = newmsg;
+		//iPad does not work well with clicking so we are providing a shortcut to select a column
+		if (BrowserInUse == "Mobile") {
+		  id = 1;
+		  if (col == "B") id = 2;
+		  if (col == "C") id = 3;
+		  SetColumn(id);
+		}		  
 	}
 
 /*********************************************************************************************************************/
@@ -230,7 +288,7 @@ function updateCounter(n) {
 /**************************************************************  showringInColumn  ****************************************/
 // Worker function to add a ring to a column and make it visible
 function showringInColumn(col,ring) {
-	LimgLink = ringincolumnLink(ring,col.id,col.count);
+	LimgLink = ringincolumnLink(ring,col.ID,col.count);
 	nRingsShowing++;
 	document.getElementById("image"+ring).innerHTML = LimgLink;
 }
@@ -274,7 +332,7 @@ function nextAnim(movearray){
 	downpx = "+="+down+"px";
 	logentry += " up,side,down,colcountfr,to "+up+","+sideways+","+down+","+colcount[from]+","+colcount[to];
 	colcount[from]--;
-	pushInCol(to,popFromCol(from));
+	Column(to).push(Column(from).pop());
 	colcount[to]++;
 	logentry += ", after:"+colcount[from]+","+colcount[to];
 	console.log(logentry);
@@ -298,46 +356,11 @@ function nextAnim(movearray){
 /*********************************************************************************************************************/
 /****************************************!!!!! Server functions  !!!!!!**********************************************/
 /*********************************************************************************************************************/
-
-/**************************************************************  ProcessMoves  ****************************************/
-//This is the callback function that parses the response from the server
-	function ProcessMoves(xml) {
-		var i;
-		var list = "";
-		var tmove;
-		var cmove;
-		console.log("in ProcessMoves");
-		var xmlDoc = xml.responseXML;
-		if (xmlDoc == null) {
-			console.log("XMLDOC is null");
-		}
-		var x = xmlDoc.getElementsByTagName("move");
-		console.log(x.length);
-		for (i = 0; i <x.length; i++) { 
-			cmove = new Array(3);
-			tmove = x[i].childNodes[0].nodeValue;
-			cmove[0] = Math.floor(tmove/100);
-			cmove[1] = Math.floor(tmove/10)%10;
-			cmove[2] = tmove%10;
-			moveslist[moveslist.length] = cmove;
-			console.log(i,moveslist.length,moveslist[moveslist.length-1]);
-			list += i+":"+moveslist[moveslist.length-1]+";";
-			}
-	}
+//Server dependency has been removed. All the algorithmic operations happen here locally.
 	
 /**************************************************************  getMovesFromServer  ****************************************/
 //This the AJAX function that sends the request to the server to run the program and return the moves.
-	function getMovesFromServer(url,cfunc,n) {
-		var xhttp;
-		xhttp=new XMLHttpRequest();
-		xhttp.onreadystatechange = function() {
-		if (xhttp.readyState == 4 && xhttp.status == 200) {
-			cfunc(xhttp);
-			}
-		};
-		xhttp.open("GET", url, false);
-		xhttp.send();
-	}
+//Deprecated
 
 /*********************************************************************************************************************/
 /****************************************!!!!! Startup functions  !!!!!!**********************************************/
@@ -360,15 +383,16 @@ function nextAnim(movearray){
 		counter=0;
 		topposbase = 508;
 		moveslist.splice(0,moveslist.length);
+		moveslogbuf="";
 		var iframe_element = window.frames['textbox'];
 		iframe_element.document.open();
 		iframe_element.document.close();
 }
 
 /**************************************************************  initAnimation  ****************************************/
-// This function does the setup of the rings in the initial column
+// This function does the setup of the rings in the initial column and also checks on the browser type
 	function initAnimation() {
-	var pos;
+		var pos;
 		var ua = navigator.userAgent.toLowerCase();
 		/*var check = function(r) {
 			return r.test(ua);
@@ -387,8 +411,7 @@ function nextAnim(movearray){
 		nRings =  parseInt(x, 10);
 		colcount[1]=nRings;
 		for (i = nRings;i >= 1;i--) {
-		   col1.count++;
-		   col1.ringstack.push(i);
+		   col1.push(i);
 		   showringInColumn(col1,i);
 		}
 		getPosition("ring3");
@@ -400,7 +423,7 @@ function nextAnim(movearray){
 /*********************************************************************************************************************/
 	
 /**************************************** SetColumn **************************************************************/
-// This function is used in the game mode to process the columns selected for origin and destination and verifies taht the move is legit
+// This function is used in the game mode to process the columns selected for origin and destination and verifies that the move is legit
 	function SetColumn(Id) {
 		if (!haveFrom) {
 			//check and make sure that the column is not empty-cells
@@ -507,7 +530,7 @@ function nextAnim(movearray){
 		doc.open();
 		initAnimation(nRings);
 		UserPoke("We will move "+nRings+" rings from column A to column B","Red");
-		getMovesFromServer('/Tower?rings='+nRings,ProcessMoves,x)
+		x = TowerOfBramha(nRings);
 		addTextToTextbox("<h2><center>List of Moves</center></h2><br><ol>");
 		mov = getNextMove();
 		nextAnim(mov);
@@ -526,6 +549,9 @@ function Showhelp(whichkind) {
 <link rel="shortcut icon" href="favicon.ico" type="image/x-icon" />
 </head>
 <body>
+  <script>
+  BrowserType()
+  </Script>
   <center>
   <h1>Tower Of Bramha</h1>
   </center>
@@ -546,11 +572,11 @@ function Showhelp(whichkind) {
   <div id="maincircus";style="position: absolute; top:150px; left:0px">
   <img src="towers.jpg" id="towers" width="600" height="400" align:left alt="" title="" USEMAP="#map1"/>
   <map NAME="map1">
-	<area SHAPE=RECT COORDS="130,110,150,360" onClick="SetColumn(1)" onMouseOver='Hovermsg("click to select Column A")'
+	<area SHAPE=RECT COORDS="130,110,150,360" onClick="SetColumn(1)" onMouseOver='Hovermsg("click to select Column", "A")'
 		onMouseOut="Hovermsg('')">
-	<area SHAPE=RECT COORDS="280,110,300,360" onClick="SetColumn(2)" onMouseOver='Hovermsg("click to select Column B")'
+	<area SHAPE=RECT COORDS="280,110,300,360" onClick="SetColumn(2)" onMouseOver='Hovermsg("click to select Column", "B")'
 		onMouseOut="Hovermsg('')">
-	<area SHAPE=RECT COORDS="430,110,450,360" onClick="SetColumn(3)" onMouseOver='Hovermsg("click to select Column C")'
+	<area SHAPE=RECT COORDS="430,110,450,360" onClick="SetColumn(3)" onMouseOver='Hovermsg("click to select Column", "C")'
 		onMouseOut="Hovermsg('')">
   </map>
  <table id="outputBar" style="position: absolute; left: 110px; top: 530px; " width=75%>
